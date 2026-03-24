@@ -2,39 +2,56 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Enviar Alerta Online</title>
+    <title>Enviar Chamado</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #1e293b; padding: 40px; border-radius: 20px; width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
-        button { background: #ef4444; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .card { background: #1e293b; padding: 30px; border-radius: 20px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        textarea { 
+            width: 100%; height: 120px; padding: 15px; background: #0b0f1a; border: 1px solid #334155; 
+            color: white; border-radius: 12px; margin-bottom: 20px; resize: none; font-size: 1rem; box-sizing: border-box;
+        }
+        button { 
+            background: #ef4444; color: white; border: none; padding: 18px; width: 100%; 
+            border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.2s;
+        }
+        button:hover { background: #dc2626; }
+        #status { margin-top: 15px; font-size: 0.85rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h3>🚨 Painel de Emergência</h3>
-    <input type="text" id="msg" placeholder="Digite a mensagem...">
-    <button onclick="enviarAlerta()">DISPARAR PARA NUVEM</button>
-    <p id="status" style="font-size: 12px; margin-top: 10px; color: #666;"></p>
+<div class="card">
+    <h2 style="margin-top:0; color:#f87171;">🚨 Ajuda P2P</h2>
+    <textarea id="textoMsg" placeholder="Digite sua mensagem de ajuda aqui..."></textarea>
+    <button onclick="disparar()">ENVIAR AGORA</button>
+    <div id="status"></div>
 </div>
 
 <script>
-    async function enviarAlerta() {
-        const msg = document.getElementById('msg').value || "Preciso de ajuda!";
+    const peer = new Peer();
+    const ID_DO_MONITOR = 'chamado-urgente-p2p';
+
+    function disparar() {
+        const msg = document.getElementById('textoMsg').value || "Preciso de ajuda urgente no sistema!";
         const status = document.getElementById('status');
         
-        status.innerText = "Enviando...";
+        status.innerText = "Conectando ao seu monitor...";
+        status.style.color = "#94a3b8";
 
-        // No Pusher, para enviar direto do navegador (client-side), 
-        // o canal deve começar com 'client-' e requer habilitar "Enable client events" no dashboard.
-        // Mas o jeito mais seguro é usar a API deles.
-        
-        // Exemplo simplificado usando Fetch para uma função que dispara o alerta:
-        console.log("Mensagem enviada para o servidor: " + msg);
-        
-        // DICA: Para testes rápidos, você pode usar o "Debug Console" no site do Pusher 
-        // para enviar a mensagem e ver seu Monitor apitando na hora!
+        const conn = peer.connect(ID_DO_MONITOR);
+
+        conn.on('open', () => {
+            conn.send(msg);
+            status.innerText = "✅ ENVIADO COM SUCESSO!";
+            status.style.color = "#22c55e";
+            document.getElementById('textoMsg').value = "";
+        });
+
+        conn.on('error', () => {
+            status.innerText = "❌ ERRO: Seu monitor está offline!";
+            status.style.color = "#ef4444";
+        });
     }
 </script>
 </body>
