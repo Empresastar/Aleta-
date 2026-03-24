@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor Online Dark</title>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; }
+        .container { background: var(--card); padding: 30px; border-radius: 16px; width: 450px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: var(--accent); margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        .mensagem { background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); margin-top: 15px; animation: slide 0.3s ease; }
+        @keyframes slide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><span>📡</span> Monitor Online Ativo</h2>
+    <p style="font-size: 0.8rem; color: #94a3b8;">Aguardando chamados via nuvem...</p>
+    <div id="lista"></div>
+</div>
+
+<audio id="som" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+    // CONFIGURAÇÃO DO PUSHER
+    const pusher = new Pusher('SUA_KEY_AQUI', { cluster: 'SEU_CLUSTER_AQUI' });
+    const canal = pusher.subscribe('meu-canal-ajuda');
+
+    canal.bind('evento-alerta', function(data) {
+        // Tocar som
+        document.getElementById('som').play();
+
+        // Mostrar na tela
+        const lista = document.getElementById('lista');
+        const div = document.createElement('div');
+        div.className = 'mensagem';
+        div.innerHTML = `<strong>${data.autor}:</strong> ${data.mensagem}`;
+        lista.prepend(div);
+
+        // Notificação do Windows
+        if (Notification.permission === "granted") {
+            new Notification("🚨 AJUDA SOLICITADA", { body: data.mensagem });
+        }
+    });
+
+    if (Notification.permission !== "granted") Notification.requestPermission();
+</script>
+</body>
+</html>
