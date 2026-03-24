@@ -2,47 +2,71 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Monitor Online Dark</title>
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <title>Monitor de Ajuda - HOST</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; }
-        .container { background: var(--card); padding: 30px; border-radius: 16px; width: 450px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h2 { color: var(--accent); margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        .mensagem { background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); margin-top: 15px; animation: slide 0.3s ease; }
-        @keyframes slide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        :root { --bg: #0b0f1a; --card: #161e2d; --accent: #3b82f6; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; margin: 0; }
+        .container { background: var(--card); padding: 30px; border-radius: 20px; width: 100%; max-width: 500px; border: 1px solid #1e293b; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px; }
+        .badge { background: #064e3b; color: #34d399; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        #lista { display: flex; flex-direction: column; gap: 15px; }
+        .msg-box { 
+            background: #1e293b; padding: 20px; border-radius: 12px; border-left: 6px solid var(--accent);
+            animation: alert-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .msg-box small { color: #94a3b8; font-size: 0.7rem; display: block; margin-bottom: 5px; }
+        .msg-box p { margin: 0; font-size: 1.1rem; line-height: 1.4; }
+        @keyframes alert-pop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2><span>📡</span> Monitor Online Ativo</h2>
-    <p style="font-size: 0.8rem; color: #94a3b8;">Aguardando chamados via nuvem...</p>
-    <div id="lista"></div>
+    <div class="header">
+        <h2 style="margin:0; font-size: 1.3rem;">📡 Central de Alertas</h2>
+        <span class="badge" id="status">CONECTANDO...</span>
+    </div>
+    <div id="lista">
+        <p style="text-align:center; color:#475569;" id="placeholder">Nenhum chamado pendente.</p>
+    </div>
 </div>
 
-<audio id="som" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<audio id="audioAlerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <script>
-    // CONFIGURAÇÃO DO PUSHER
-    const pusher = new Pusher('SUA_KEY_AQUI', { cluster: 'SEU_CLUSTER_AQUI' });
-    const canal = pusher.subscribe('meu-canal-ajuda');
+    // ID FIXO PARA O SEU CHEFE CONECTAR
+    const peer = new Peer('chamado-urgente-p2p'); 
 
-    canal.bind('evento-alerta', function(data) {
-        // Tocar som
-        document.getElementById('som').play();
+    peer.on('open', () => {
+        document.getElementById('status').innerText = "ONLINE";
+        console.log("Monitor pronto no ID: chamado-urgente-p2p");
+    });
 
-        // Mostrar na tela
-        const lista = document.getElementById('lista');
-        const div = document.createElement('div');
-        div.className = 'mensagem';
-        div.innerHTML = `<strong>${data.autor}:</strong> ${data.mensagem}`;
-        lista.prepend(div);
+    peer.on('connection', (conn) => {
+        conn.on('data', (data) => {
+            // 1. Tocar o Som
+            const som = document.getElementById('audioAlerta');
+            som.currentTime = 0;
+            som.play();
 
-        // Notificação do Windows
-        if (Notification.permission === "granted") {
-            new Notification("🚨 AJUDA SOLICITADA", { body: data.mensagem });
-        }
+            // 2. Remover o texto de "vazio"
+            const placeholder = document.getElementById('placeholder');
+            if(placeholder) placeholder.remove();
+
+            // 3. Criar o balão da mensagem
+            const lista = document.getElementById('lista');
+            const div = document.createElement('div');
+            div.className = 'msg-box';
+            const hora = new Date().toLocaleTimeString();
+            div.innerHTML = `<small>${hora} - MENSAGEM RECEBIDA:</small><p>${data}</p>`;
+            lista.prepend(div);
+
+            // 4. Notificação de Desktop (opcional)
+            if (Notification.permission === "granted") {
+                new Notification("🚨 ALERTA DE AJUDA", { body: data });
+            }
+        });
     });
 
     if (Notification.permission !== "granted") Notification.requestPermission();
