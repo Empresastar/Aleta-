@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Enviar Alerta Online</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #1e293b; padding: 40px; border-radius: 20px; width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
+        button { background: #ef4444; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>🚨 Painel de Emergência</h3>
+    <input type="text" id="msg" placeholder="Digite a mensagem...">
+    <button onclick="enviarAlerta()">DISPARAR PARA NUVEM</button>
+    <p id="status" style="font-size: 12px; margin-top: 10px; color: #666;"></p>
+</div>
+
+<script>
+    async function enviarAlerta() {
+        const msg = document.getElementById('msg').value || "Preciso de ajuda!";
+        const status = document.getElementById('status');
+        
+        status.innerText = "Enviando...";
+
+        // No Pusher, para enviar direto do navegador (client-side), 
+        // o canal deve começar com 'client-' e requer habilitar "Enable client events" no dashboard.
+        // Mas o jeito mais seguro é usar a API deles.
+        
+        // Exemplo simplificado usando Fetch para uma função que dispara o alerta:
+        console.log("Mensagem enviada para o servidor: " + msg);
+        
+        // DICA: Para testes rápidos, você pode usar o "Debug Console" no site do Pusher 
+        // para enviar a mensagem e ver seu Monitor apitando na hora!
+    }
+</script>
+</body>
+</html>
